@@ -1,0 +1,160 @@
+* Notes
+I ran this command to start this lab assignment:
+#+begin_src bash
+npx create-react-app client --use-npm
+#+end_src
+
+I then opened up the 'package.json' manifest file in the 'client' directory, and modified the 'start' script to have the '"start": "PORT=4000 react-scripts start"' section as per the following contents of 'package.json':
+#+begin_src json
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "PORT=4000 react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
+#+end_src
+
+I then ran the Rails backend with the 'rails s' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-adding-react-to-rails $ rails s
+Resolving dependencies...
+=> Booting Puma
+=> Rails 6.1.3.2 application starting in development
+=> Run `bin/rails server --help` for more startup options
+Puma starting in single mode...
+* Puma version: 5.3.1 (ruby 2.7.4-p191) ("Sweetnighter")
+*  Min threads: 5
+*  Max threads: 5
+*  Environment: development
+*          PID: 20376
+* Listening on http://127.0.0.1:3000
+* Listening on http://[::1]:3000
+Use Ctrl-C to stop
+#+end_src
+
+I then ran another terminal with the 'npm start --prefix client' command to start up the React frontend.
+
+I then verified that everything was working by visiting the following URLs in the Chrome browser:
+- http://localhost:4000
+- http://localhost:3000/movies
+
+I then updated the React side of the application within the 'App.js' file with a fetch() request from the frontend to the backend:
+#+begin_src js
+import logo from './logo.svg';
+import './App.css';
+// NOTE: Commented this out since this was causing issues:
+// import { useEffect } from 'react/cjs/react.production.min';
+import { useEffect } from "react";
+
+function App() {
+  useEffect(() => {
+    fetch("/movies")
+    .then((r) => r.json())
+    .then((movies) => console.log("movies: ", movies))
+  }, []);
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <p>
+          Edit <code>src/App.js</code> and save to reload.
+        </p>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header>
+    </div>
+  );
+}
+
+export default App;
+#+end_src
+
+I then installed the 'foreman' gem which helps facilitate multiple Ruby server processes running at once (kind of like a terminal multiplexer like 'tmux', etc):
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-adding-react-to-rails $ gem install foreman
+Fetching foreman-0.87.2.gem
+Successfully installed foreman-0.87.2
+Parsing documentation for foreman-0.87.2
+Installing ri documentation for foreman-0.87.2
+Done installing documentation for foreman after 0 seconds
+1 gem installed
+#+end_src
+
+I then created a 'Procfile.dev' for the 'Foreman' gem which handles the server and client connections, and placed the following contents inside of it:
+#+begin_src js
+web: PORT=4000 npm start --prefix client
+api: PORT=3000 rails s
+#+end_src
+
+I then stopped the 'React' frontend and 'Rails' backend server processes, and then ran them both with a single 'foreman start -f Procfile.dev' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-adding-react-to-rails $ foreman start -f Procfile.dev
+19:53:56 web.1  | started with pid 21461
+19:53:56 api.1  | started with pid 21462
+19:53:56 web.1  |
+19:53:56 web.1  | > client@0.1.0 start
+19:53:56 web.1  | > PORT=4000 react-scripts start
+19:53:56 web.1  |
+19:53:57 api.1  | => Booting Puma
+19:53:57 api.1  | => Rails 6.1.3.2 application starting in development
+19:53:57 api.1  | => Run `bin/rails server --help` for more startup options
+19:53:57 api.1  | Puma starting in single mode...
+19:53:57 api.1  | * Puma version: 5.3.1 (ruby 2.7.4-p191) ("Sweetnighter")
+19:53:57 api.1  | *  Min threads: 5
+19:53:57 api.1  | *  Max threads: 5
+19:53:57 api.1  | *  Environment: development
+19:53:57 api.1  | *          PID: 21462
+19:53:57 api.1  | * Listening on http://127.0.0.1:3000
+19:53:57 api.1  | * Listening on http://[::1]:3000
+19:53:57 api.1  | Use Ctrl-C to stop
+#+end_src
+
+The lab then noted that you can STILL run the commands separately if you wanted to though:
+#+begin_src bash
+npm start --prefix client
+rails s
+#+end_src
+
+Answers For 'Check Your Understanding':
+- Q1. What options do you have for running Rails and React at the same time?
+- Answer: You can either run 'rails s' and 'npm start --prefix client' separately, or run a single 'foreman start -f Procfile.dev' command
+- Q2. What are the advantages and disadvantages of using foreman as described in this lesson?
+- The advantage is that you only need one command to run both the frontend and the backend. The disadvantages include the fact that you can't use 'byebug' for debugging backend issues, and the server logs are harder to read and interpret.
